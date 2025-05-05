@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UPI Entry Page</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1e1e2f; /* Dark background */
+      color: #fff;
+    }
+
+    .upi-container {
+      background: #2c2f3f; /* Darker container for the payment box look */
+      padding: 30px;
+      border-radius: 12px;
+      width: 350px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+      border: 1px solid #444;
+    }
+
+    .upi-container h2 {
+      margin-bottom: 20px;
+      color: #00ffff; /* Cyan color for heading */
+      font-size: 26px;
+      font-weight: bold;
+    }
+
+    .icon-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .icon-container img {
+      width: 45px;
+      height: 45px;
+      border-radius: 8px;
+    }
+
+    input[type="text"] {
+      padding: 14px;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #00ffff;
+      margin-bottom: 25px;
+      font-size: 18px;
+      background-color: #333850; /* Dark background for input */
+      color: #fff;
+      outline: none;
+    }
+
+    input[type="text"]::placeholder {
+      color: #bbb;
+    }
+
+    .submit-button {
+      padding: 14px 28px;
+      background: #00ffff; /* Cyan color for button */
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      color: #000;
+      font-size: 18px;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .submit-button:hover {
+      background: #00ccff; /* Hover effect for button */
+      transform: translateY(-2px);
+    }
+
+    /* Popup styles */
+    .popup {
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #2c2f3f;
+      color: #fff;
+      padding: 30px 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+      text-align: center;
+      z-index: 9999;
+      display: none;
+      width: 320px;
+    }
+
+    .popup img {
+      width: 80px;
+      margin-bottom: 20px;
+    }
+
+    .popup div {
+      font-size: 18px;
+      margin-top: 15px;
+    }
+
+    /* Views Counter Section */
+    .views-counter {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #00ffff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="upi-container">
+    <h2>Enter Your UPI ID</h2>
+
+    <div class="icon-container">
+      <img src="upi.png" alt="UPI Logo" />
+      <img src="phonePe.png" alt="PhonePe Logo" />
+      <img src="Googlepay.png" alt="GPay Logo" />
+    </div>
+
+    <input type="text" id="upiId" placeholder="example@upi" />
+    <br />
+    <button class="submit-button" onclick="submitUpi()">Submit</button>
+
+    <!-- Views Counter -->
+    <div class="views-counter">
+      Views: <span id="viewsCount">0</span>
+    </div>
+  </div>
+
+  <!-- Verification Popup -->
+  <div class="popup" id="verificationPopup">
+    Verifying your UPI ID...
+  </div>
+
+  <!-- Success Popup -->
+  <div class="popup" id="successPopup">
+    <img src="https://cdn-icons-png.flaticon.com/512/845/845646.png" alt="Verified Badge" />
+    <div>Your money will be transferred within 1 hour.</div>
+  </div>
+
+  <!-- Invalid UPI ID Popup -->
+  <div class="popup" id="invalidPopup">
+    Invalid UPI ID! Please ensure your ID contains the "@" symbol.
+  </div>
+
+  <!-- Already Submitted Popup -->
+  <div class="popup" id="alreadySubmittedPopup">
+    You have already submitted your UPI ID!
+  </div>
+
+  <!-- Optional: Success Sound -->
+  <audio id="successSound" preload="auto">
+    <source src="pay.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    let alreadySubmitted = false;
+
+    // Track views count using localStorage
+    function updateViewCount() {
+      let views = localStorage.getItem('viewsCount');
+      views = views ? parseInt(views) : 0;
+      views++;
+      localStorage.setItem('viewsCount', views);
+      document.getElementById('viewsCount').textContent = views;
+    }
+
+    // Call updateViewCount when the page loads
+    window.onload = updateViewCount;
+
+    function submitUpi() {
+      const upiId = document.getElementById('upiId').value.trim();
+      const verificationPopup = document.getElementById('verificationPopup');
+      const successPopup = document.getElementById('successPopup');
+      const invalidPopup = document.getElementById('invalidPopup');
+      const alreadySubmittedPopup = document.getElementById('alreadySubmittedPopup');
+      const sound = document.getElementById('successSound');
+
+      // Check if already submitted
+      if (alreadySubmitted) {
+        alreadySubmittedPopup.style.display = 'block';
+        setTimeout(() => {
+          alreadySubmittedPopup.style.display = 'none';
+        }, 3000);
+        return;
+      }
+
+      // Check if UPI ID is valid
+      if (upiId === "" || !upiId.includes('@')) {
+        invalidPopup.style.display = 'block';
+        setTimeout(() => {
+          invalidPopup.style.display = 'none';
+        }, 3000);
+        return;
+      }
+
+      // Verification and success flow
+      verificationPopup.style.display = 'block';
+
+      setTimeout(() => {
+        verificationPopup.style.display = 'none';
+        successPopup.style.display = 'block';
+        sound.play();
+        alreadySubmitted = true;
+
+        setTimeout(() => {
+          successPopup.style.display = 'none';
+        }, 4000);
+      }, 5000);
+    }
+  </script>
+</body>
+</html>
