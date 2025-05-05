@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mobile Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #24243e, #302b63, #0f0c29);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding-top: 70px;
+      position: relative;
+    }
+
+    .dashboard-container {
+      width: 90%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .greeting {
+      font-size: 2em;
+      text-align: center;
+      margin-bottom: 20px;
+      animation: moveUpShrink 1.5s ease-out forwards, pulseGlow 2s infinite alternate;
+    }
+
+    @keyframes moveUpShrink {
+      to {
+        opacity: 1;
+        transform: translateY(-35vh) scale(0.7);
+      }
+    }
+
+    @keyframes pulseGlow {
+      0% {
+        text-shadow: 0 0 5px #ff6ec7;
+      }
+      100% {
+        text-shadow: 0 0 30px #ff6ec7;
+      }
+    }
+
+    .top-right {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+    }
+
+    .profile-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 0 8px #0ff;
+      cursor: pointer;
+    }
+
+    .profile-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #user-info {
+      position: absolute;
+      top: 50px;
+      right: -10px;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 8px;
+      border-radius: 5px;
+      font-size: 0.8em;
+      display: none;
+      white-space: pre-line;
+    }
+
+    .wheel-container {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 20px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 0 10px cyan;
+      position: relative;
+    }
+
+    #wheel-image {
+      width: 100%;
+      height: 100%;
+      background-image: url('animated.png');
+      background-size: cover;
+      transition: transform 10s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    #wheel-arrow {
+      position: absolute;
+      top: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 25px;
+      height: 25px;
+      background-image: url('arrow.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      z-index: 3;
+    }
+
+    #start-animate, #generate-random, #redeem-button {
+      padding: 10px;
+      font-size: 0.9em;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    #start-animate {
+      background: linear-gradient(135deg, #0ff, #00ccff);
+      color: #000;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    .coin-box {
+      background: rgba(0,0,0,0.7);
+      color: #ffc107;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 15px;
+      text-align: center;
+      width: 100%;
+    }
+
+    .random-number-box {
+      margin-top: 15px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px;
+      border-radius: 8px;
+      width: 100%;
+      text-align: center;
+    }
+
+    #generate-random {
+      background: linear-gradient(135deg, #ffa000, #ffc107);
+      color: #000;
+      box-shadow: 0 0 8px #ffc107;
+    }
+
+    #redeem-button {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #00ffcc, #00ccff);
+      color: #000;
+      opacity: 0.5;
+      pointer-events: none;
+      box-shadow: 0 0 10px #00ffff;
+      z-index: 10;
+    }
+
+    #redeem-button.enabled {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #winner-display {
+      margin-top: 20px;
+      background: green;
+      color: white;
+      padding: 8px;
+      border-radius: 6px;
+      text-align: center;
+      font-weight: bold;
+      opacity: 0;
+      transition: opacity 0.5s ease-in;
+    }
+
+    .show-winner {
+      opacity: 1;
+    }
+
+    .insufficient-coins-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: red;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+      display: none;
+    }
+
+    .insufficient-coins-popup.show {
+      display: block;
+    }
+
+    .notice-box {
+      margin-top: 25px;
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.85em;
+      text-align: center;
+      border: 1px solid cyan;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-right">
+    <div class="profile-circle" id="profile-toggle">
+      <img id="dashboard-bitmoji" src="" alt="Bitmoji" />
+      <div id="user-info"></div>
+    </div>
+  </div>
+
+  <div class="dashboard-container">
+    <h1 class="greeting" id="welcome-message">Welcome!</h1>
+    <h3>Spin the Wheel</h3>
+    <div class="wheel-container">
+      <div id="wheel-image"></div>
+      <div id="wheel-arrow"></div>
+    </div>
+    <button id="start-animate">Spin</button>
+
+    <div class="coin-box">
+      Balance: <span id="coin-balance">₹0</span>
+    </div>
+
+    <div class="random-number-box">
+      <div>Random Money: <span id="random-number-display">₹0</span></div>
+      <div id="timer-display"></div>
+      <button id="generate-random">Generate Money</button>
+    </div>
+
+    <div id="winner-display"></div>
+  </div>
+
+  <button id="redeem-button">Redeem</button>
+
+  <div id="insufficient-coins" class="insufficient-coins-popup">
+    Insufficient Coins! You need ₹100 to spin.<br>
+    <button onclick="document.getElementById('insufficient-coins').classList.remove('show')">Okay</button>
+  </div>
+
+  <div class="notice-box">
+    <strong>Notice:</strong> Redeem becomes active at ₹1000 coins. Keep generating to reach the goal!
+  </div>
+
+  <script>
+    const bitmoji = document.getElementById("dashboard-bitmoji");
+    const userInfo = document.getElementById("user-info");
+    const profileToggle = document.getElementById("profile-toggle");
+    const welcomeMessage = document.getElementById("welcome-message");
+    const wheel = document.getElementById("wheel-image");
+    const spinBtn = document.getElementById("start-animate");
+    const balanceDisplay = document.getElementById("coin-balance");
+    const randomBtn = document.getElementById("generate-random");
+    const randomDisplay = document.getElementById("random-number-display");
+    const timerDisplay = document.getElementById("timer-display");
+    const winnerDisplay = document.getElementById("winner-display");
+    const redeemButton = document.getElementById("redeem-button");
+    const insufficientPopup = document.getElementById("insufficient-coins");
+
+    let coins = 0;
+    const spinCost = 100;
+    const redeemTarget = 1000;
+    const rewards = ["Prize A", "Prize B", "Prize C", "Prize D"];
+    const randomValues = [5, 10, 15, 30, 50, 100, 200];
+    let isSpinning = false;
+    let isGenerating = false;
+
+    const user = JSON.parse(localStorage.getItem("loginUser"));
+    if (user?.username) welcomeMessage.textContent = `Welcome, ${user.username}!`;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const bitmojiUrl = urlParams.get("bitmoji");
+    if (bitmojiUrl) bitmoji.src = decodeURIComponent(bitmojiUrl);
+
+    profileToggle.onclick = () => {
+      userInfo.textContent = user ? `Username: ${user.username}\nPassword: ${user.password}` : "User data not found.";
+      userInfo.style.display = "block";
+      setTimeout(() => (userInfo.style.display = "none"), 2500);
+    };
+
+    function updateCoins(amount = 0) {
+      coins += amount;
+      balanceDisplay.textContent = `₹${coins}`;
+      redeemButton.classList.toggle("enabled", coins >= redeemTarget);
+    }
+
+    spinBtn.onclick = () => {
+      if (isSpinning || coins < spinCost) {
+        insufficientPopup.classList.add("show");
+        return;
+      }
+
+      isSpinning = true;
+      spinBtn.disabled = true;
+      updateCoins(-spinCost);
+
+      const deg = 360 * 8 + Math.floor(Math.random() * 360);
+      wheel.style.transform = `rotate(${deg}deg)`;
+
+      setTimeout(() => {
+        const index = Math.floor((deg % 360) / (360 / rewards.length));
+        winnerDisplay.textContent = `You won: ${rewards[index]}`;
+        winnerDisplay.classList.add("show-winner");
+        isSpinning = false;
+        spinBtn.disabled = false;
+      }, 10000);
+    };
+
+    randomBtn.onclick = () => {
+      if (isGenerating) return;
+      isGenerating = true;
+      let countdown = 5;
+      timerDisplay.textContent = `Generating in: ${countdown}s`;
+      randomBtn.disabled = true;
+
+      const interval = setInterval(() => {
+        countdown--;
+        timerDisplay.textContent = `Generating in: ${countdown}s`;
+        if (countdown <= 0) {
+          clearInterval(interval);
+          const value = randomValues[Math.floor(Math.random() * randomValues.length)];
+          updateCoins(value);
+          randomDisplay.textContent = `₹${value}`;
+          randomBtn.disabled = false;
+          timerDisplay.textContent = '';
+          isGenerating = false;
+        }
+      }, 1000);
+    };
+
+    redeemButton.onclick = () => {
+      if (coins >= redeemTarget) {
+        window.location.href = "redeem.html";
+      }
+    };
+  </script>
+  <div id="visitor-counter" style="
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 0 10px rgba(255,255,255,0.3);
+  z-index: 9999;
+  font-family: 'Arial', sans-serif;
+  animation: pulse 2s infinite;
+">
+  <span>🔥</span>
+  <span id="visit-count">0</span> Visitors
+</div>
+
+<style>
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+</style>
+  <script>
+  // Get count from localStorage or default to 0
+  let visitCount = localStorage.getItem('visitCount') || 0;
+  visitCount++;
+  localStorage.setItem('visitCount', visitCount);
+
+  // Show count in element
+  document.getElementById('visit-count').textContent = visitCount;
+</script>
+  <script type="text/javascript">
+	atOptions = {
+		'key' : 'd0a0d4f583e9d6bea2338155b8621327',
+		'format' : 'iframe',
+		'height' : 600,
+		'width' : 160,
+		'params' : {}
+	};
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/d0a0d4f583e9d6bea2338155b8621327/invoke.js"></script>
+  <script type="text/javascript">
+	atOptions = {
+		'key' : 'd6a7c29964fb8df2368434ee645578c5',
+		'format' : 'iframe',
+		'height' : 300,
+		'width' : 160,
+		'params' : {}
+	};
+</script>
+  <script type='text/javascript' src='//pl26568709.profitableratecpm.com/b2/71/75/b27175f6b630e7389a5776e9a3e9da12.js'></script>
+<script type="text/javascript" src="//www.highperformanceformat.com/d6a7c29964fb8df2368434ee645578c5/invoke.js"></script>
+  
+  
+  <script async="async" data-cfasync="false" src="//pl26569040.profitableratecpm.com/76a540be7e5f9e96ba2da1dd866a25f4/invoke.js"></script>
+<div id="container-76a540be7e5f9e96ba2da1dd866a25f4"></div>
+  
+  
+</body>
+</html>
